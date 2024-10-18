@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Dashboard</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Weather Data from GitHub</h1>
+
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title"><strong>Line Chart</strong></h3>
+            </div>
+            <div class="panel-body">
+                <div id="container1" style="width: 100%; height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- External JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+
+    <!-- Custom JavaScript for Weather Data Chart -->
+    <script>
+        let tempArr = [], co2Arr = [], timeArr = [];
+        let myChart = Highcharts.chart('container1', {
+
+            title: {
+                text: 'Weather Data'
+            },
+
+            subtitle: {
+                text: 'Data from GitHub'
+            },
+
+            yAxis: {
+                title: {
+                    text: 'Value'
+                }
+            },
+
+            xAxis: {
+                categories: timeArr
+            },
+
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+
+            plotOptions: {
+                series: {
+                    label: {
+                        connectorAllowed: false
+                    }
+                }
+            },
+            series: [{
+                name: 'Temperature',
+                data: []
+            }, {
+                name: 'CO2 Levels',
+                data: []
+            }],
+
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 500
+                    },
+                    chartOptions: {
+                        legend: {
+                            layout: 'horizontal',
+                            align: 'center',
+                            verticalAlign: 'bottom'
+                        }
+                    }
+                }]
+            }
+        });
+
+        // Fetch the data from the GitHub raw content URL
+        let getWeatherData = function () {
+            $.ajax({
+                type: "GET",
+                url: "https://raw.githubusercontent.com/captain-america-7/temp1/refs/heads/main/data.json", // GitHub raw URL
+                dataType: "json",
+                success: function (data) {
+                    console.log('Data:', data);
+                    drawChart(data);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error retrieving data: " + status);
+                }
+            });
+        }
+
+        // Function to draw the chart using the retrieved data
+        let drawChart = function (data) {
+            data.forEach(item => {
+                // Assuming JSON structure contains 'temp', 'CO2', and 'timestamp'
+                let temp = Number(item.payload.M.temp.N);
+                let co2 = Number(item.payload.M.CO2.S);
+                let timestamp = item.payload.M.timestamp.S;
+
+                tempArr.push(temp);
+                co2Arr.push(co2);
+                timeArr.push(timestamp);
+            });
+
+            // Update the chart with the fetched data
+            myChart.series[0].setData(tempArr, true);
+            myChart.series[1].setData(co2Arr, true);
+            myChart.xAxis[0].setCategories(timeArr, true);
+        }
+
+        // Fetch and display data when the page loads
+        $(document).ready(function () {
+            getWeatherData();
+        });
+    </script>
+
+</body>
+
+</html>
